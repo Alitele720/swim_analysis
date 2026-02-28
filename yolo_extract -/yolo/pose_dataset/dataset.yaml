@@ -1,5 +1,5 @@
 
-path: C:\Users\Alitele\Desktop\analysis\yolo_extract -\yolo\pose_dataset
+path: D:\B2308\swim_analysis\yolo_extract -\yolo\pose_dataset
 train: images/train
 val: images/val
 

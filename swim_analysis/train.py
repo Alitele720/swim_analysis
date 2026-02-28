@@ -1,9 +1,13 @@
 from ultralytics import YOLO
+import os
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(ROOT_DIR, "models", "swimmer_pose_best.pt")
 
 if __name__ == "__main__":
     # 1. 修改模型：使用检测模型 (yolov8n.pt) 而不是姿态模型 (yolov8n-pose.pt)
     # 除非你的数据集确实包含了骨骼关键点标注，否则请使用 yolov8n.pt
-    model = YOLO('yolov8n-pose.pt')
+    model = YOLO(MODEL_PATH)
 
     # 2. 修改路径：指向正确的 yaml 文件位置
     # 假设 train.py 在 swim_analysis 文件夹下，且 yaml 在 dataset/swimmer1/s1.yaml

@@ -1,12 +1,25 @@
 import cv2
 import numpy as np
 from ultralytics import YOLO
+from preprocess import preprocess_frame
+import os
+import sys
 
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
 class PoseEngine:
     def __init__(self, model_type='x'):
         print(f"正在加载 YOLOv8{model_type}-pose 模型...")
-        self.model = YOLO(f'yolov8{model_type}-pose.pt')
+        MODEL_PATH = os.path.join(ROOT_DIR, "models", "swimmer_pose_best.pt")
+
+        if os.path.exists(MODEL_PATH):
+            print("加载自训练模型...")
+            self.model = YOLO(MODEL_PATH)
+        else:
+            print("未找到自训练模型，加载官方模型...")
+            self.model = YOLO("yolov8n-pose.pt")
 
     @staticmethod
     def calculate_angle(a, b, c):
@@ -51,7 +64,7 @@ class PoseEngine:
                 continue
 
             # 1. 图像增强
-            input_frame = self.enhance_frame(frame) if enable_enhance else frame
+            input_frame = preprocess_frame(frame, training=False)
 
             # 2. YOLO 推理
             results = self.model(input_frame, verbose=False)
