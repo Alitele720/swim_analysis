@@ -44,7 +44,7 @@ if len(image_files) == 0:
     exit()
 
 index = 0
-mode = "keypoint"
+mode = "keypoint"  # keypoint / bbox
 selected_point = None
 selected_corner = None
 points = []
@@ -185,7 +185,8 @@ def mouse_callback(event, x, y, flags, param):
         elif event == cv2.EVENT_LBUTTONUP:
             selected_point = None
 
-    else:
+    else:  # bbox 模式
+
         corners = [(x1, y1), (x2, y1), (x1, y2), (x2, y2)]
 
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -243,16 +244,20 @@ while True:
 
     key = cv2.waitKey(1)
 
-    if key == 9:
+    if key == 9:  # Tab 键
         mode = "bbox" if mode == "keypoint" else "keypoint"
+
     elif key == ord('s'):
         save_label_and_image()
+
     elif key == ord('d'):
         index = (index + 1) % len(image_files)
         load_image(index)
+
     elif key == ord('a'):
         index = (index - 1) % len(image_files)
         load_image(index)
+
     elif key == 27:
         break
 
