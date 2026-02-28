@@ -1,0 +1,16 @@
+# 1. 路径必须修正为正斜杠 (之前提到的报错点)
+path: C:/Users/Alitele/Desktop/analysis/swim_analysis/dataset/swimmer1
+train: train/images
+val: valid/images   # 再次提醒：去文件夹确认一下是 val 还是 valid
+test: test/images
+
+# 2. 你的自定义类别 (保持原样，不要改！)
+names:
+  0: correct
+  1: wrong
+
+# 3. 关键点形状 (Pose 任务的核心配置)
+# 格式: [关键点数量, 3]
+# 3 代表: x坐标, y坐标, 可见性
+# 大多数标注工具(如Roboflow)导出的人体关键点默认是 17 个点
+kpt_shape: [17, 3]

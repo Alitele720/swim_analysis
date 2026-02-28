@@ -1,0 +1,9 @@
+
+path: C:\Users\89111\Desktop\yolo_extract\pose_dataset
+train: images/train
+val: images/val
+
+names:
+  0: person
+
+kpt_shape: [17,3]

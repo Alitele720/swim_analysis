@@ -1,0 +1,9 @@
+
+path: C:\Users\Alitele\Desktop\analysis\yolo_extract -\yolo\pose_dataset
+train: images/train
+val: images/val
+
+names:
+  0: person
+
+kpt_shape: [17,3]
