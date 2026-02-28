@@ -225,16 +225,13 @@ while True:
     draw_bbox(temp)
     draw_keypoints(temp)
 
-    cv2.putText(temp,
-                f"{index+1}/{len(image_files)}  Mode:{mode}  | Tab: Switch Annotation Mode",
-                (20, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
-                (0, 255, 0),
-                2)
-
-    # 获取窗口大小并缩放
+    # 获取当前窗口尺寸
     _, _, win_w, win_h = cv2.getWindowImageRect("Pose Editor Pro")
+
+    # 【修复逻辑】：如果获取到的尺寸太小（比如还没加载出来），使用默认的 1000x800 进行计算
+    if win_w < 100 or win_h < 100:
+        win_w, win_h = 1000, 800
+
     scale = min(win_w / w, win_h / h)
     if scale <= 0:
         scale = 1
