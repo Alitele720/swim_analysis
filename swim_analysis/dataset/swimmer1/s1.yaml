@@ -1,5 +1,5 @@
 # 1. 路径必须修正为正斜杠 (之前提到的报错点)
-path: C:/Users/Alitele/Desktop/analysis/swim_analysis/dataset/swimmer1
+path: dataset/swimmer1
 train: train/images
 val: valid/images   # 再次提醒：去文件夹确认一下是 val 还是 valid
 test: test/images
