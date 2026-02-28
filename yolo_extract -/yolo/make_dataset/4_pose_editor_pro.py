@@ -6,11 +6,11 @@ import glob
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 SOURCE_DIR = os.path.join(BASE_DIR, "images")
-ORIGIN_LABEL_DIR = os.path.join(BASE_DIR, "labels")            # 自动检测标签
-SAVE_LABEL_DIR = os.path.join(BASE_DIR, "label_editored")     # 人工标签
+ORIGIN_LABEL_DIR = os.path.join(BASE_DIR, "labels")
+EDITED_LABEL_DIR = os.path.join(BASE_DIR, "label_editored")
 SAVE_IMG_DIR = os.path.join(BASE_DIR, "images_editor")
 
-os.makedirs(SAVE_LABEL_DIR, exist_ok=True)
+os.makedirs(EDITED_LABEL_DIR, exist_ok=True)
 os.makedirs(SAVE_IMG_DIR, exist_ok=True)
 # ===================================================
 
@@ -27,8 +27,8 @@ SKELETON = [
     (11, 13), (13, 15), (12, 14), (14, 16)
 ]
 
-# ===================== 读取有标签图片 =====================
 image_files = []
+
 for img_path in glob.glob(os.path.join(SOURCE_DIR, "*.jpg")):
     auto_label = os.path.join(
         ORIGIN_LABEL_DIR,
@@ -44,11 +44,13 @@ if len(image_files) == 0:
     exit()
 
 index = 0
-mode = "keypoint"  # keypoint / bbox
+mode = "keypoint"
 selected_point = None
 selected_corner = None
 points = []
 bbox = None
+
+scale = 1.0
 
 
 # ===================== 加载图像与标签 =====================
@@ -58,10 +60,9 @@ def load_image(idx):
     image_path = image_files[idx]
     filename = os.path.basename(image_path)
 
-    edited_label = os.path.join(SAVE_LABEL_DIR, filename.replace(".jpg", ".txt"))
+    edited_label = os.path.join(EDITED_LABEL_DIR, filename.replace(".jpg", ".txt"))
     auto_label = os.path.join(ORIGIN_LABEL_DIR, filename.replace(".jpg", ".txt"))
 
-    # 优先读取人工标签
     label_path = edited_label if os.path.exists(edited_label) else auto_label
 
     img = cv2.imread(image_path)
@@ -81,17 +82,14 @@ def load_image(idx):
         points.append([x, y, v])
 
 
-# ===================== 保存标签 + 可视化图 =====================
+# ===================== 保存标签 =====================
 def save_label_and_image():
     global bbox, points
 
     image_path = image_files[index]
     filename = os.path.basename(image_path)
 
-    label_path = os.path.join(
-        SAVE_LABEL_DIR,
-        filename.replace(".jpg", ".txt")
-    )
+    label_path = os.path.join(EDITED_LABEL_DIR, filename.replace(".jpg", ".txt"))
 
     new_line = [0] + bbox
 
@@ -113,10 +111,11 @@ def save_label_and_image():
     print("已保存人工标签:", filename)
 
 
-# ===================== 绘制函数 =====================
+# ===================== 绘制 =====================
 def draw_bbox(temp):
     if bbox is None:
         return
+
     xc, yc, bw, bh = bbox
     x1 = int((xc - bw / 2) * w)
     y1 = int((yc - bh / 2) * h)
@@ -125,32 +124,41 @@ def draw_bbox(temp):
 
     cv2.rectangle(temp, (x1, y1), (x2, y2), (255, 0, 0), 2)
 
-    # bbox 四个角点
     for (cx, cy) in [(x1, y1), (x2, y1), (x1, y2), (x2, y2)]:
         cv2.circle(temp, (cx, cy), 6, (0, 255, 255), -1)
 
 
 def draw_keypoints(temp):
-    # 骨架
     for (i, j) in SKELETON:
         if i < len(points) and j < len(points):
             if points[i][2] > 0 and points[j][2] > 0:
-                cv2.line(temp, (points[i][0], points[i][1]),
-                         (points[j][0], points[j][1]), (0, 255, 0), 2)
+                cv2.line(temp,
+                         (points[i][0], points[i][1]),
+                         (points[j][0], points[j][1]),
+                         (0, 255, 0), 2)
 
-    # 关键点
     for i, (x, y, v) in enumerate(points):
         if v > 0:
             cv2.circle(temp, (x, y), 5, (0, 0, 255), -1)
-            cv2.putText(temp, KPT_NAMES[i], (x + 5, y - 5),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+            cv2.putText(temp, KPT_NAMES[i],
+                        (x + 5, y - 5),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.4, (255, 255, 255), 1)
         else:
             cv2.circle(temp, (x, y), 5, (128, 128, 128), 2)
+            cv2.putText(temp, KPT_NAMES[i],
+                        (x + 5, y - 5),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.4, (128, 128, 128), 1)
 
 
-# ===================== 鼠标事件 =====================
+# ===================== 鼠标 =====================
 def mouse_callback(event, x, y, flags, param):
-    global selected_point, selected_corner, bbox
+    global selected_point, selected_corner, bbox, scale
+
+    # 坐标映射回原图
+    x = int(x / scale)
+    y = int(y / scale)
 
     xc, yc, bw, bh = bbox
     x1 = int((xc - bw / 2) * w)
@@ -177,8 +185,7 @@ def mouse_callback(event, x, y, flags, param):
         elif event == cv2.EVENT_LBUTTONUP:
             selected_point = None
 
-    else:  # bbox 模式
-
+    else:
         corners = [(x1, y1), (x2, y1), (x1, y2), (x2, y2)]
 
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -187,7 +194,6 @@ def mouse_callback(event, x, y, flags, param):
                     selected_corner = i
 
         elif event == cv2.EVENT_MOUSEMOVE and selected_corner is not None:
-
             if selected_corner == 0:
                 x1, y1 = x, y
             elif selected_corner == 1:
@@ -197,19 +203,18 @@ def mouse_callback(event, x, y, flags, param):
             elif selected_corner == 3:
                 x2, y2 = x, y
 
-            bbox = [
-                (x1 + x2) / (2 * w),
-                (y1 + y2) / (2 * h),
-                abs(x2 - x1) / w,
-                abs(y2 - y1) / h
-            ]
+            bbox = [(x1 + x2) / (2 * w),
+                    (y1 + y2) / (2 * h),
+                    abs(x2 - x1) / w,
+                    abs(y2 - y1) / h]
 
         elif event == cv2.EVENT_LBUTTONUP:
             selected_corner = None
 
 
 # ===================== 主程序 =====================
-cv2.namedWindow("Pose Editor Pro")
+cv2.namedWindow("Pose Editor Pro", cv2.WINDOW_NORMAL)
+cv2.resizeWindow("Pose Editor Pro", 1000, 800)
 cv2.setMouseCallback("Pose Editor Pro", mouse_callback)
 
 load_image(index)
@@ -219,27 +224,35 @@ while True:
     draw_bbox(temp)
     draw_keypoints(temp)
 
-    cv2.putText(temp, f"{index + 1}/{len(image_files)}  Mode:{mode}  (Tab: Switch Mode)",
-                (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
-                (0, 255, 0), 2)
+    cv2.putText(temp,
+                f"{index+1}/{len(image_files)}  Mode:{mode}  | Tab: Switch Annotation Mode",
+                (20, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 255, 0),
+                2)
 
-    cv2.imshow("Pose Editor Pro", temp)
+    # 获取窗口大小并缩放
+    _, _, win_w, win_h = cv2.getWindowImageRect("Pose Editor Pro")
+    scale = min(win_w / w, win_h / h)
+    if scale <= 0:
+        scale = 1
+
+    resized = cv2.resize(temp, (int(w * scale), int(h * scale)))
+    cv2.imshow("Pose Editor Pro", resized)
+
     key = cv2.waitKey(1)
 
-    if key == 9:  # Tab 键
+    if key == 9:
         mode = "bbox" if mode == "keypoint" else "keypoint"
-
     elif key == ord('s'):
         save_label_and_image()
-
     elif key == ord('d'):
         index = (index + 1) % len(image_files)
         load_image(index)
-
     elif key == ord('a'):
         index = (index - 1) % len(image_files)
         load_image(index)
-
     elif key == 27:
         break
 
