@@ -1,14 +1,24 @@
 import cv2
-import os
 from tqdm import tqdm
+import sys
+import os
+import random
 
+# ================= 路径处理 =================
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+sys.path.append(ROOT_DIR)
+
+from preprocess import preprocess_frame
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # ================= 参数 =================
-FRAMES_PER_SECOND = 5  # 每秒抽几帧
+FRAMES_PER_SECOND = 5        # 每秒抽几帧
+AUGMENT_PROBABILITY = 0.5    #  50% 概率做预处理（可改）
+
 VIDEO_DIR = os.path.join(BASE_DIR, "videos")
 IMAGE_DIR = os.path.join(BASE_DIR, "images")
-# ======================================
+# ==========================================
 
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
@@ -25,7 +35,6 @@ for video_name in video_files:
     fps = cap.get(cv2.CAP_PROP_FPS)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    # 每隔多少秒保存一张
     save_interval_sec = 1.0 / FRAMES_PER_SECOND
     next_save_time = 0.0
 
@@ -40,15 +49,26 @@ for video_name in video_files:
             if not ret:
                 break
 
-            # 当前时间（秒）
             current_time = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
 
-            # 到时间点就保存
             if current_time >= next_save_time:
                 img_name = f"{video_base}_{image_index:04d}.jpg"
                 img_path = os.path.join(IMAGE_DIR, img_name)
 
-                cv2.imwrite(img_path, frame)
+                # ==========================
+                # 随机一半做预处理
+                # ==========================
+                if random.random() < AUGMENT_PROBABILITY:
+                    frame_to_save = preprocess_frame(
+                        frame,
+                        training=False,     # ⚠ 不再让 preprocess 自己随机
+                        noise_robust=False
+                    )
+                else:
+                    frame_to_save = frame  # 原图直接保存
+
+                cv2.imwrite(img_path, frame_to_save)
+
                 image_index += 1
                 next_save_time += save_interval_sec
 
