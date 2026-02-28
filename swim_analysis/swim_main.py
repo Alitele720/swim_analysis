@@ -36,7 +36,7 @@ class SwimCoachAI:
 
             # 侦测 Q 键退出
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                print("\n[提示] 🛑 用户手动中止了分析，正在返回主菜单...")
+                print("\n[提示]用户手动中止了分析，正在返回主菜单...")
                 break
 
         out.release()
@@ -60,7 +60,7 @@ class SwimCoachAI:
             cv2.imshow("Analyzing Stroke Rate (Press 'Q' to abort)", annotated_frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                print("\n[提示] 🛑 用户手动中止提取，已取消报告生成，返回主菜单...")
+                print("\n[提示]用户手动中止提取，已取消报告生成，返回主菜单...")
                 abort = True
                 break
 
@@ -71,7 +71,7 @@ class SwimCoachAI:
 
         # 解决假性重复播放：明确打印错误原因
         if len(wrist_history) < 10:
-            print("\n[错误] ❌ 有效手腕数据不足（模型未能清晰捕捉到手臂连续动作）。")
+            print("\n[错误]有效手腕数据不足（模型未能清晰捕捉到手臂连续动作）。")
             print("建议：1. 开启图像增强 (选 y)\n      2. 尝试更清晰的视频片段\n已退回主菜单。")
             return
 
@@ -93,8 +93,8 @@ class SwimCoachAI:
         duration = (full_frames[-1] - full_frames[0]) / fps
         spm = (len(peaks) / duration) * 60 if duration > 0 else 0
 
-        print(f"\n✅ 报告生成成功！\n检测到划水次数: {len(peaks)} 次\n平均划频: {spm:.1f} SPM")
-        print("💡 提示：请关闭弹出的图表窗口，即可自动返回主菜单。")
+        print(f"\n报告生成成功！\n检测到划水次数: {len(peaks)} 次\n平均划频: {spm:.1f} SPM")
+        print(" 提示：请关闭弹出的图表窗口，即可自动返回主菜单。")
 
         plt.figure(figsize=(10, 5))
         plt.plot(full_frames, y_smoothed, label='Smoothed Wrist Track', color='#1f77b4')
@@ -124,7 +124,7 @@ class SwimCoachAI:
             cv2.imshow(f"{window_title} (Press 'Q' to abort)", annotated_frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                print(f"\n[提示] 🛑 用户手动中止了 {window_title} 的提取。")
+                print(f"\n[提示]用户手动中止了 {window_title} 的提取。")
                 abort = True
                 break
 
@@ -144,13 +144,13 @@ class SwimCoachAI:
         print(f"\n--- 开始提取【用户视频】动作特征 ---")
         seq_user = self._extract_angle_sequence(user_video, enable_enhance, "User Video")
         if seq_user is None:
-            print("\n[错误] ❌ 用户视频特征提取中止或失败，返回主菜单。")
+            print("\n[错误]用户视频特征提取中止或失败，返回主菜单。")
             return
 
         print(f"\n--- 开始提取【专业视频】动作特征 ---")
         seq_pro = self._extract_angle_sequence(pro_video, enable_enhance, "Pro Video")
         if seq_pro is None:
-            print("\n[错误] ❌ 专业视频特征提取中止或失败，返回主菜单。")
+            print("\n[错误]专业视频特征提取中止或失败，返回主菜单。")
             return
 
         print("\n⚙️ 特征提取完毕，正在运行 DTW 动态时间规整...")
@@ -163,7 +163,7 @@ class SwimCoachAI:
         print(f" AI 动作相似度评分: {score:.1f} / 100")
         print(f" 平均每帧角度误差: {avg_error:.2f} 度")
         print(f"=============================")
-        print("💡 提示：请关闭弹出的图表窗口，即可自动返回主菜单。")
+        print("提示：请关闭弹出的图表窗口，即可自动返回主菜单。")
 
         user_warped = [seq_user[idx_u][0] for idx_u, idx_p in path]
         pro_warped = [seq_pro[idx_p][0] for idx_u, idx_p in path]
