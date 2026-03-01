@@ -10,8 +10,8 @@ if __name__ == "__main__":
     model = YOLO(MODEL_PATH)
 
     # 2. 修改路径：指向正确的 yaml 文件位置
-    # 假设 train.py 在 swim_analysis 文件夹下，且 yaml 在 dataset/swimmer1/s1.yaml
-    yaml_path = r"dataset/swimmer1/s1.yaml"
+    # 利用 ROOT_DIR 动态生成该设备的绝对路径
+    yaml_path = os.path.join(ROOT_DIR, "dataset", "swimmer1", "s1.yaml")
 
     # 如果上面路径报错，可以使用绝对路径，例如：
     # yaml_path = r"C:\Users\89111\Desktop\analysis\swim_analysis\dataset\swimmer1\s1.yaml"
