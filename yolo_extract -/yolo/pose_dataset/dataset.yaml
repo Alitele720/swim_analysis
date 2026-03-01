@@ -1,5 +1,5 @@
 
-path: D:\B2308\swim_analysis\yolo_extract -\yolo\pose_dataset
+path: .
 train: images/train
 val: images/val
 
